@@ -1,11 +1,34 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 
+type costEstimateResult = {
+  origin_city: string
+  destination_city: string
+  currency: string
+  summary_total: number
+  confidence: 'low' | 'medium' | 'high'
+  breakdown: {
+    [key: string]: { amount: number; note: string }
+  }
+}
+
+type timelineGenerateResult = {
+  destination_country: string
+  target_move_date: string
+  milestones: Array<{
+    date: string
+    title: string
+    category: string
+    is_critical: boolean
+    notes: string
+  }>
+}
+
 export const estimateCostTool = tool({
   description: `Estimate the full cost breakdown for an international relocation.
     Only call this when you have: origin city, destination city, and family size.
     Do NOT call speculatively — wait for the user to provide the required inputs.`,
-  parameters: z.object({
+  inputSchema: z.object({
     origin_city: z.string().describe('City and country e.g. "London, UK"'),
     destination_city: z.string().describe('City and country e.g. "Berlin, Germany"'),
     family_size: z.number().int().min(1).max(10).describe('Number of people relocating'),
@@ -18,32 +41,35 @@ export const estimateCostTool = tool({
     has_pets: z.boolean().describe('Whether pets are included in the move'),
   }),
   execute: async ({ origin_city, destination_city, family_size, housing_preference }) => {
-    // Placeholder logic — replace with real estimates in Week 5
+    // Placeholder logic
+    
     const base = housing_preference === 'premium' ? 15000 : housing_preference === 'mid' ? 9000 : 5000
     const perPerson = 1200
-
-    return {
+    const result: costEstimateResult = {
       origin_city,
       destination_city,
       currency: 'USD',
       summary_total: base + perPerson * family_size,
-      confidence: 'medium' as const,
+      confidence:  'medium' as const,
       breakdown: {
         visa_and_legal:    { amount: 800  + family_size * 200, note: 'Varies by nationality' },
-        international_shipping: { amount: 1500 + (housing_preference === 'full_household' ? 3000 : 0), note: 'Sea freight estimate' },
+        international_shipping: { amount: 1500 + (housing_preference === 'mid' ? 3000 : 0), note: 'Sea freight estimate' },
         temporary_housing: { amount: 2000, note: '2–4 weeks on arrival' },
         first_month_rent:  { amount: housing_preference === 'premium' ? 4000 : housing_preference === 'mid' ? 2200 : 1200, note: 'Deposit + first month' },
         flights:           { amount: 800  * family_size, note: 'Economy, one-way' },
         misc_buffer:       { amount: 1500, note: '10% contingency recommended' },
       },
     }
+
+    return result
   },
 })
+
 
 export const generateTimelineTool = tool({
   description: `Generate a step-by-step relocation timeline with milestones and deadlines.
     Call this when the user has a destination country and a target move date.`,
-  parameters: z.object({
+  inputSchema: z.object({
     origin_country: z.string().describe('Country moving from'),
     destination_country: z.string().describe('Country moving to'),
     target_move_date: z.string().describe('ISO date string e.g. "2026-09-01"'),
@@ -57,8 +83,7 @@ export const generateTimelineTool = tool({
       d.setMonth(d.getMonth() - months)
       return d.toISOString().split('T')[0]
     }
-
-    return {
+    const result: timelineGenerateResult = {
       destination_country,
       target_move_date,
       milestones: [
@@ -136,6 +161,8 @@ export const generateTimelineTool = tool({
         },
       ],
     }
+
+    return result
   },
 })
 
