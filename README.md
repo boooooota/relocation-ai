@@ -1,6 +1,6 @@
 # Relocation AI
 
-AI-powered relocation assistant — generates cost estimates and move 
+Your AI-powered move planner — generates cost estimates and move 
 timelines from a single conversation.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
